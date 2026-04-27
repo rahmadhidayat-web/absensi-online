@@ -146,9 +146,9 @@ function absen(){
 fetch(url,{
   method:"POST",
   headers:{
-    "Content-Type":"text/plain;charset=utf-8"
+    "Content-Type":"application/json"
   },
-  body: JSON.stringify({
+  body:JSON.stringify({
     nama:nama,
     password:password,
     status:status,
@@ -158,15 +158,8 @@ fetch(url,{
     foto:foto
   })
 })
-.then(res => res.text())
-.then(text => {
-
-  let r;
-  try {
-    r = JSON.parse(text);
-  } catch {
-    throw new Error("Response bukan JSON");
-  }
+.then(res=>res.json()) // 🔥 langsung json
+.then(r=>{
 
   msg.innerHTML = `<div class='alert ${
     r.status=="success"?"alert-success":"alert-danger"
@@ -180,7 +173,11 @@ fetch(url,{
   }
 
 })
-.catch(err=>{
+.catch((err)=>{
+  console.log(err);
+  msg.innerHTML = "<div class='alert alert-danger'>Gagal koneksi (response tidak valid)</div>";
+  btn.disabled = false;
+});.catch(err=>{
   console.log(err);
   msg.innerHTML = "<div class='alert alert-danger'>Gagal koneksi (CORS/Deploy)</div>";
   btn.disabled = false;
