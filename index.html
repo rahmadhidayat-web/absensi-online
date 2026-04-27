@@ -144,34 +144,40 @@ function absen(){
 
       // 🔥 KIRIM DATA (ANTI ERROR)
       fetch(url,{
-        method:"POST",
-        body:JSON.stringify({
-          nama:nama,
-          password:password,
-          status:status,
-          lat:pos.coords.latitude,
-          lon:pos.coords.longitude,
-          lokasiDetail:lokasiValid,
-          foto:foto
-        })
-      })
-      .then(res=>res.text())
-      .then(text=>{
+  method:"POST",
+  headers:{
+    "Content-Type":"application/json"
+  },
+  body:JSON.stringify({
+    nama:nama,
+    password:password,
+    status:status,
+    lat:pos.coords.latitude,
+    lon:pos.coords.longitude,
+    lokasiDetail:lokasiValid,
+    foto:foto
+  })
+})
+.then(res=>res.json()) // 🔥 langsung json
+.then(r=>{
 
-        let r = JSON.parse(text);
+  msg.innerHTML = `<div class='alert ${
+    r.status=="success"?"alert-success":"alert-danger"
+  }'>${r.message}</div>`;
 
-        msg.innerHTML = `<div class='alert ${
-          r.status=="success"?"alert-success":"alert-danger"
-        }'>${r.message}</div>`;
+  if(r.status=="success"){
+    let today = new Date().toLocaleDateString();
+    localStorage.setItem("absen_"+today, "true");
+  } else {
+    btn.disabled = false;
+  }
 
-        if(r.status=="success"){
-          let today = new Date().toLocaleDateString();
-          localStorage.setItem("absen_"+today, "true");
-        } else {
-          btn.disabled = false;
-        }
-
-      })
+})
+.catch((err)=>{
+  console.log(err);
+  msg.innerHTML = "<div class='alert alert-danger'>Gagal koneksi (response tidak valid)</div>";
+  btn.disabled = false;
+});
       .catch(()=>{
         msg.innerHTML = "<div class='alert alert-danger'>Gagal koneksi</div>";
         btn.disabled = false;
