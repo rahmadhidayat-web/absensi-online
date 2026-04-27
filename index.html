@@ -145,41 +145,24 @@ function absen(){
       // 🔥 KIRIM DATA (ANTI ERROR)
 fetch(url,{
   method:"POST",
-  headers:{
-    "Content-Type":"text/plain;charset=utf-8"
-  },
   body: JSON.stringify({
     nama:nama,
-    password:password,
     status:status,
     lat:pos.coords.latitude,
-    lon:pos.coords.longitude,
-    lokasiDetail:lokasiValid,
-    foto:foto
+    lon:pos.coords.longitude
   })
 })
 .then(res => res.text())
-.then(text => {
-
-  let r;
-  try {
-    r = JSON.parse(text);
-  } catch {
-    throw new Error("Response bukan JSON");
-  }
-
-  msg.innerHTML = `<div class='alert ${
-    r.status=="success"?"alert-success":"alert-danger"
-  }'>${r.message}</div>`;
-
-  if(r.status=="success"){
-    let today = new Date().toLocaleDateString();
-    localStorage.setItem("absen_"+today, "true");
-  } else {
-    btn.disabled = false;
-  }
-
+.then(res => {
+  console.log(res);
+  document.getElementById("msg").innerHTML =
+    "<div class='alert alert-success'>Terkirim</div>";
 })
+.catch(err => {
+  console.log(err);
+  document.getElementById("msg").innerHTML =
+    "<div class='alert alert-danger'>Tidak terhubung</div>";
+});
 .catch(err=>{
   console.log(err);
   msg.innerHTML = "<div class='alert alert-danger'>Gagal koneksi (CORS/Deploy)</div>";
