@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+<title>Absensi Digital</title>
+
+<style>
+body {
+  background: linear-gradient(135deg,#e3f2fd,#fff);
+}
+.card {
+  border-radius: 20px;
+}
+video {
+  width:100%;
+  border-radius:15px;
+  transform: scaleX(-1);
+}
+</style>
+</head>
+
+<body class="d-flex align-items-center justify-content-center">
+
+<div class="container">
+<div class="row justify-content-center">
+<div class="col-md-5">
+
+<div class="card p-4 shadow">
+
+<h5 class="text-center fw-bold">Absensi Digital</h5>
+
+<input id="nama" class="form-control my-2" placeholder="Nama Lengkap">
+<input id="password" type="password" class="form-control my-2" placeholder="Password">
+
+<select id="status" class="form-select my-2">
+<option value="Masuk">Masuk</option>
+<option value="Pulang">Pulang</option>
+</select>
+
+<video id="video" autoplay></video>
+<canvas id="canvas" class="d-none"></canvas>
+
+<button onclick="absen()" class="btn btn-primary w-100 mt-3">
+Kirim Absen
+</button>
+
+<div id="msg" class="mt-3 text-center"></div>
+
+</div>
+</div>
+</div>
+</div>
+
+<script>
+const url = "https://script.google.com/macros/s/AKfycbwxjlI9jM7PmjU9VO-osGQ_AGb1sjH1_rUweO6lZj-wYshDpl4MTgDG8xl57gB4KunF/exec";
+
+// lokasi kantor
+const kantor = { lat: 0.469213, lon: 101.3793428 };
+
+// kamera
+navigator.mediaDevices.getUserMedia({ video: true })
+.then(s => video.srcObject = s);
+
+// hitung jarak
+function jarak(a,b,c,d){
+  const R=6371e3;
+  const dLat=(c-a)*Math.PI/180;
+  const dLon=(d-b)*Math.PI/180;
+  const x=Math.sin(dLat/2)**2+
+  Math.cos(a*Math.PI/180)*Math.cos(c*Math.PI/180)*Math.sin(dLon/2)**2;
+  return R*(2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x)));
+}
+
+// fungsi absen
+function absen(){
+  const msg = document.getElementById("msg");
+
+  let nama = document.getElementById("nama").value;
+  let password = document.getElementById("password").value;
+
+  if(!nama || !password){
+    msg.innerHTML = "<div class='alert alert-danger'>Isi semua data</div>";
+    return;
+  }
+
+  msg.innerHTML = "<div class='alert alert-info'>Memproses...</div>";
+
+  navigator.geolocation.getCurrentPosition(pos => {
+
+    let d = jarak(pos.coords.latitude,pos.coords.longitude,kantor.lat,kantor.lon);
+
+    if(d > 100){
+      msg.innerHTML = "<div class='alert alert-danger'>Diluar area</div>";
+      return;
+    }
+
+    // foto
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    canvas.getContext("2d").drawImage(video,0,0);
+    let foto = canvas.toDataURL("image/jpeg");
+
+    fetch(url,{
+      method:"POST",
+      body:JSON.stringify({
+        nama,password,
+        status:status.value,
+        lat:pos.coords.latitude,
+        lon:pos.coords.longitude,
+        lokasiDetail:"Kampus",
+        foto
+      })
+    })
+    .then(res=>res.json())
+    .then(r=>{
+      msg.innerHTML = `<div class='alert ${r.status=="success"?"alert-success":"alert-danger"}'>${r.message}</div>`;
+    })
+    .catch(()=>{
+      msg.innerHTML = "<div class='alert alert-danger'>Gagal koneksi</div>";
+    });
+
+  });
+}
+</script>
+
+</body>
+</html>
